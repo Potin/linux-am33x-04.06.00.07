@@ -952,6 +952,12 @@ static struct pinmux_config ecap0_pin_mux[] = {
 	{NULL, 0},
 };
 
+/* Module pin mux for eCAP2 */
+static struct pinmux_config ecap2_pin_mux[] = {
+	{"mcasp0_ahclkr.ecap2_in_pwm2_out",	OMAP_MUX_MODE4 | AM33XX_PIN_OUTPUT},
+	{NULL, 0},
+};
+
 static int backlight_enable;
 
 #define AM335XEVM_WLAN_PMENA_GPIO	GPIO_TO_PIN(1, 30)
@@ -1187,6 +1193,12 @@ static void haptics_init(int evm_id, int profile)
 	setup_pin_mux(haptics_pin_mux);
 	pwm_pdata[2].chan_attrib[1].max_freq = HAPTICS_MAX_FREQ;
 	am33xx_register_ehrpwm(2, &pwm_pdata[2]);
+}
+
+static void ecap2_init(int evm_id, int profile)
+{
+	setup_pin_mux(ecap2_pin_mux);
+	am33xx_register_ecap(2, &pwm_pdata[2]);
 }
 
 /* NAND partition information */
@@ -1929,6 +1941,7 @@ static struct evm_dev_cfg gen_purp_evm_dev_cfg[] = {
 	{tsc_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
 	{d_can_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
 	{uart_all_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{ecap2_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
 	{NULL, 0, 0},
 };
 
