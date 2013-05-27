@@ -35,9 +35,12 @@
 #include <linux/mfd/tps65910.h>
 #include <linux/mfd/tps65217.h>
 #include <linux/pwm_backlight.h>
-#include <linux/input/ti_tscadc.h>
+#include <linux/input/ti_tsc.h>
+#include <linux/platform_data/ti_adc.h>
+#include <linux/mfd/ti_tscadc.h>
 #include <linux/reboot.h>
 #include <linux/pwm/pwm.h>
+
 
 /* LCD controller is similar to DA850 */
 #include <video/da8xx-fb.h>
@@ -64,6 +67,8 @@
 #include "mux.h"
 #include "devices.h"
 #include "hsmmc.h"
+
+#define DELTA_AM335X
 
 /* Convert GPIO signal to GPIO pin number */
 #define GPIO_TO_PIN(bank, gpio) (32 * (bank) + (gpio))
@@ -178,6 +183,14 @@ struct da8xx_lcdc_platform_data TFC_S9700RTWV35TR_01B_pdata = {
 static struct tsc_data am335x_touchscreen_data  = {
 	.wires  = 4,
 	.x_plate_resistance = 200,
+	.steps_to_configure = 5,
+};
+static struct adc_data am335x_adc_data = {
+	.adc_channels = 8,
+};
+static struct mfd_tscadc_board tscadc = {
+   /*   .tsc_init = &am335x_touchscreen_data, */
+        .adc_init = &am335x_adc_data,
 };
 
 static u8 am335x_iis_serializer_direction1[] = {
@@ -204,7 +217,8 @@ static struct omap2_hsmmc_info am335x_mmc[] __initdata = {
 	{
 		.mmc            = 1,
 		.caps           = MMC_CAP_4_BIT_DATA,
-		.gpio_cd        = GPIO_TO_PIN(0, 6),
+		//.gpio_cd        = GPIO_TO_PIN(0, 6),
+		.gpio_cd        = GPIO_TO_PIN(3, 14),
 		.gpio_wp        = GPIO_TO_PIN(3, 18),
 		.ocr_mask       = MMC_VDD_32_33 | MMC_VDD_33_34, /* 3V3 */
 	},
@@ -381,6 +395,7 @@ static struct pinmux_config haptics_pin_mux[] = {
 	{NULL, 0},
 };
 
+#ifndef DELTA_AM335X
 /* Module pin mux for LCDC */
 static struct pinmux_config lcdc_pin_mux[] = {
 	{"lcd_data0.lcd_data0",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT
@@ -429,6 +444,39 @@ static struct pinmux_config lcdc_pin_mux[] = {
 	{"lcd_ac_bias_en.lcd_ac_bias_en", OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT},
 	{NULL, 0},
 };
+#else
+static struct pinmux_config lcdc_pin_mux[] = {
+	{"lcd_data0.lcd_data0",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data1.lcd_data1",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data2.lcd_data2",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data3.lcd_data3",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data4.lcd_data4",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data5.lcd_data5",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data6.lcd_data6",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data7.lcd_data7",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data8.lcd_data8",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data9.lcd_data9",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data10.lcd_data10",	OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data11.lcd_data11",	OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data12.lcd_data12",	OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data13.lcd_data13",	OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data14.lcd_data14",	OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+	{"lcd_data15.lcd_data15",	OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT | AM33XX_PULL_DISA},
+//	{"gpmc_ad8.lcd_data16",		OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+//	{"gpmc_ad9.lcd_data17",		OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+//	{"gpmc_ad10.lcd_data18",	OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+//	{"gpmc_ad11.lcd_data19",	OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+//	{"gpmc_ad12.lcd_data20",	OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+//	{"gpmc_ad13.lcd_data21",	OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+//	{"gpmc_ad14.lcd_data22",	OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+//	{"gpmc_ad15.lcd_data23",	OMAP_MUX_MODE1 | AM33XX_PIN_OUTPUT},
+	{"lcd_vsync.lcd_vsync",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT},
+	{"lcd_hsync.lcd_hsync",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT},
+	{"lcd_pclk.lcd_pclk",		OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT},
+	{"lcd_ac_bias_en.lcd_ac_bias_en", OMAP_MUX_MODE0 | AM33XX_PIN_OUTPUT},
+	{NULL, 0},
+};
+#endif
 
 static struct pinmux_config tsc_pin_mux[] = {
 	{"ain0.ain0",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
@@ -440,23 +488,45 @@ static struct pinmux_config tsc_pin_mux[] = {
 	{NULL, 0},
 };
 
+static struct pinmux_config adc_pin_mux[] = {
+	{"ain0.ain0",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"ain1.ain1",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"ain2.ain2",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"ain3.ain3",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"ain4.ain4",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"ain5.ain5",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"ain6.ain6",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"ain7.ain7",           OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"vrefp.vrefp",         OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{"vrefn.vrefn",         OMAP_MUX_MODE0 | AM33XX_INPUT_EN},
+	{NULL, 0},
+};
+
 /* Pin mux for nand flash module */
 static struct pinmux_config nand_pin_mux[] = {
-	{"gpmc_ad0.gpmc_ad0",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_ad1.gpmc_ad1",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_ad2.gpmc_ad2",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_ad3.gpmc_ad3",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_ad4.gpmc_ad4",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_ad5.gpmc_ad5",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_ad6.gpmc_ad6",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_ad7.gpmc_ad7",	  OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_wait0.gpmc_wait0", OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_wpn.gpmc_wpn",	  OMAP_MUX_MODE7 | AM33XX_PIN_INPUT_PULLUP},
-	{"gpmc_csn0.gpmc_csn0",	  OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
-	{"gpmc_advn_ale.gpmc_advn_ale",  OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
-	{"gpmc_oen_ren.gpmc_oen_ren",	 OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
-	{"gpmc_wen.gpmc_wen",     OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
-	{"gpmc_ben0_cle.gpmc_ben0_cle",	 OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
+	{"gpmc_ad0.gpmc_ad0",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad1.gpmc_ad1",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad2.gpmc_ad2",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad3.gpmc_ad3",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad4.gpmc_ad4",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad5.gpmc_ad5",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad6.gpmc_ad6",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad7.gpmc_ad7",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad8.gpmc_ad8",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad9.gpmc_ad9",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad10.gpmc_ad10",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad11.gpmc_ad11",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad12.gpmc_ad12",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad13.gpmc_ad13",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad14.gomc_ad14",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_ad15.gpmc_ad15",		OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_wait0.gpmc_wait0", 	OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_wpn.gpmc_wpn",	  	OMAP_MUX_MODE7 | AM33XX_PIN_INPUT_PULLUP},
+	{"gpmc_csn0.gpmc_csn0",	  	OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
+	{"gpmc_advn_ale.gpmc_advn_ale",	OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
+	{"gpmc_oen_ren.gpmc_oen_ren",	OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
+	{"gpmc_wen.gpmc_wen",		OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
+	{"gpmc_ben0_cle.gpmc_ben0_cle",	OMAP_MUX_MODE0 | AM33XX_PULL_DISA},
 	{NULL, 0},
 };
 
@@ -594,8 +664,8 @@ static struct pinmux_config mmc0_pin_mux[] = {
 	{"mmc0_dat0.mmc0_dat0",	OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
 	{"mmc0_clk.mmc0_clk",	OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
 	{"mmc0_cmd.mmc0_cmd",	OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
-	{"mcasp0_aclkr.mmc0_sdwp", OMAP_MUX_MODE7 | AM33XX_PIN_INPUT_PULLUP},
-	{"spi0_cs1.mmc0_sdcd",  OMAP_MUX_MODE7 | AM33XX_PIN_INPUT_PULLUP},
+	{"mcasp0_aclkr.mmc0_sdwp", OMAP_MUX_MODE7 | AM33XX_PIN_INPUT_PULLDOWN},
+	{"mcasp0_aclkx.mmc0_sdcd", OMAP_MUX_MODE7 | AM33XX_PIN_INPUT_PULLUP},
 	{NULL, 0},
 };
 
@@ -627,13 +697,7 @@ static struct pinmux_config mmc1_pin_mux[] = {
 	{NULL, 0},
 };
 
-/* Module pin mux for uart3 */
-static struct pinmux_config uart3_pin_mux[] = {
-	{"spi0_cs1.uart3_rxd", AM33XX_PIN_INPUT_PULLUP},
-	{"ecap0_in_pwm0_out.uart3_txd", AM33XX_PULL_ENBL},
-	{NULL, 0},
-};
-
+#ifndef DELTA_AM335X
 static struct pinmux_config d_can_gp_pin_mux[] = {
 	{"uart0_ctsn.d_can1_tx", OMAP_MUX_MODE2 | AM33XX_PULL_ENBL},
 	{"uart0_rtsn.d_can1_rx", OMAP_MUX_MODE2 | AM33XX_PIN_INPUT_PULLUP},
@@ -645,16 +709,48 @@ static struct pinmux_config d_can_ia_pin_mux[] = {
 	{"uart0_txd.d_can0_rx", OMAP_MUX_MODE2 | AM33XX_PIN_INPUT_PULLUP},
 	{NULL, 0},
 };
+#else
+static struct pinmux_config d_can_0_pin_mux[] = {
+	{"uart1_ctsn.d_can0_tx", OMAP_MUX_MODE2 | AM33XX_PULL_ENBL},
+	{"uart1_rtsn.d_can0_rx", OMAP_MUX_MODE2 | AM33XX_PIN_INPUT_PULLUP},
+	{NULL, 0},
+};
+static struct pinmux_config d_can_1_pin_mux[] = {
+	{"uart0_ctsn.d_can1_tx", OMAP_MUX_MODE2 | AM33XX_PULL_ENBL},
+	{"uart0_rtsn.d_can1_rx", OMAP_MUX_MODE2 | AM33XX_PIN_INPUT_PULLUP},
+	{NULL, 0},
+};
+#endif
 
 /* Module pin mux for uart2 */
 static struct pinmux_config uart2_pin_mux[] = {
-	{"spi0_sclk.uart2_rxd", OMAP_MUX_MODE1 | AM33XX_SLEWCTRL_SLOW |
-						AM33XX_PIN_INPUT_PULLUP},
-	{"spi0_d0.uart2_txd", OMAP_MUX_MODE1 | AM33XX_PULL_UP |
-						AM33XX_PULL_DISA |
-						AM33XX_SLEWCTRL_SLOW},
+	{"spi0_sclk.uart2_rxd",	OMAP_MUX_MODE1 | AM33XX_SLEWCTRL_SLOW | AM33XX_PIN_INPUT_PULLUP},
+	{"spi0_d0.uart2_txd",	OMAP_MUX_MODE1 | AM33XX_PULL_UP | AM33XX_PULL_DISA | AM33XX_SLEWCTRL_SLOW},
 	{NULL, 0},
 };
+
+/* Module pin mux for uart3 */
+static struct pinmux_config uart3_pin_mux[] = {
+	{"spi0_cs1.uart3_rxd",		OMAP_MUX_MODE1 | AM33XX_PIN_INPUT_PULLUP},
+	{"ecap0_in_pwm0_out.uart3_txd",	OMAP_MUX_MODE1 | AM33XX_PULL_ENBL},
+	{NULL, 0},
+};
+
+#ifdef DELTA_AM335X
+/* Module pin mux for uart1 */
+static struct pinmux_config uart1_pin_mux[] = {
+	{"uart1_rxd.uart1_rxd",	OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
+	{"uart1_txd.uart1_txd",	OMAP_MUX_MODE0 | AM33XX_PULL_ENBL},
+	{NULL, 0},
+};
+
+/* Module pin mux for uart5 */
+static struct pinmux_config uart5_pin_mux[] = {
+	{"lcd_data9.uart5_rxd",	OMAP_MUX_MODE4 | AM33XX_PIN_INPUT_PULLUP},
+	{"lcd_data8.uart5_txd",	OMAP_MUX_MODE4 | AM33XX_PULL_ENBL},
+	{NULL, 0},
+};
+#endif
 
 
 /*
@@ -971,6 +1067,7 @@ static void lcdc_init(int evm_id, int profile)
 	return;
 }
 
+#if 0
 static void tsc_init(int evm_id, int profile)
 {
 	int err;
@@ -988,6 +1085,26 @@ static void tsc_init(int evm_id, int profile)
 	if (err)
 		pr_err("failed to register touchscreen device\n");
 }
+#endif
+static void tsc_init(int evm_id, int profile)
+{
+	int err;
+
+	err = am33xx_register_mfd_tscadc(&tscadc);
+	if (err)
+		pr_err("failed to register touchscreen device\n");
+}
+
+#if 0
+static void adc_init(int evm_id, int profile)
+{
+	int err;
+	setup_pin_mux(adc_pin_mux);
+	err = am33xx_register_adc(&am335x_adc_data);
+	if (err)
+		pr_err("failed to register adc device\n");
+}
+#endif
 
 static void rgmii1_init(int evm_id, int profile)
 {
@@ -1025,10 +1142,10 @@ static void usb1_init(int evm_id, int profile)
 	return;
 }
 
-/* setup uart3 */
-static void uart3_init(int evm_id, int profile)
+/* setup uart1 */
+static void uart1_init(int evm_id, int profile)
 {
-	setup_pin_mux(uart3_pin_mux);
+	setup_pin_mux(uart1_pin_mux);
 	return;
 }
 
@@ -1036,6 +1153,30 @@ static void uart3_init(int evm_id, int profile)
 static void uart2_init(int evm_id, int profile)
 {
 	setup_pin_mux(uart2_pin_mux);
+	return;
+}
+
+/* setup uart3 */
+static void uart3_init(int evm_id, int profile)
+{
+	setup_pin_mux(uart3_pin_mux);
+	return;
+}
+
+/* setup uart5 */
+static void uart5_init(int evm_id, int profile)
+{
+	setup_pin_mux(uart5_pin_mux);
+	return;
+}
+
+/* setup all uart */
+static void uart_all_init(int evm_id, int profile)
+{
+	setup_pin_mux(uart1_pin_mux);
+	setup_pin_mux(uart2_pin_mux);
+	setup_pin_mux(uart3_pin_mux);
+	setup_pin_mux(uart5_pin_mux);
 	return;
 }
 
@@ -1411,6 +1552,7 @@ static struct lis3lv02d_platform_data lis331dlh_pdata = {
 };
 
 static struct i2c_board_info am335x_i2c_boardinfo1[] = {
+#if 0
 	{
 		I2C_BOARD_INFO("tlv320aic3x", 0x1b),
 	},
@@ -1423,6 +1565,10 @@ static struct i2c_board_info am335x_i2c_boardinfo1[] = {
 	},
 	{
 		I2C_BOARD_INFO("tmp275", 0x48),
+	},
+#endif
+	{
+		I2C_BOARD_INFO("24c08", 0x50),
 	},
 };
 
@@ -1563,6 +1709,7 @@ out:
 	return;
 }
 
+#ifndef DELTA_AM335X
 static void d_can_init(int evm_id, int profile)
 {
 	switch (evm_id) {
@@ -1584,6 +1731,15 @@ static void d_can_init(int evm_id, int profile)
 		break;
 	}
 }
+#else
+static void d_can_init(int evm_id, int profile)
+{
+	setup_pin_mux(d_can_0_pin_mux);
+	am33xx_d_can_init(0);
+	setup_pin_mux(d_can_1_pin_mux);
+	am33xx_d_can_init(1);
+}
+#endif
 
 static void mmc0_init(int evm_id, int profile)
 {
@@ -1622,7 +1778,6 @@ static void tps65217_init(int evm_id, int profile)
 static void mmc0_no_cd_init(int evm_id, int profile)
 {
 	setup_pin_mux(mmc0_no_cd_pin_mux);
-
 	omap2_hsmmc_init(am335x_mmc);
 	return;
 }
@@ -1729,6 +1884,7 @@ static struct evm_dev_cfg low_cost_evm_dev_cfg[] = {
 	{NULL, 0, 0},
 };
 
+#ifndef DELTA_AM335X
 /* General Purpose EVM */
 static struct evm_dev_cfg gen_purp_evm_dev_cfg[] = {
 	{enable_ecap0,	DEV_ON_DGHTR_BRD, (PROFILE_0 | PROFILE_1 |
@@ -1762,6 +1918,21 @@ static struct evm_dev_cfg gen_purp_evm_dev_cfg[] = {
 	{haptics_init,	DEV_ON_DGHTR_BRD, (PROFILE_4)},
 	{NULL, 0, 0},
 };
+#else
+static struct evm_dev_cfg gen_purp_evm_dev_cfg[] = {
+	{rgmii1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{i2c1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{usb0_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{usb1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{mmc0_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{evm_nand_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{tsc_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{d_can_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{uart_all_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{NULL, 0, 0},
+};
+
+#endif
 
 /* Industrial Auto Motor Control EVM */
 static struct evm_dev_cfg ind_auto_mtrl_evm_dev_cfg[] = {
@@ -1821,6 +1992,7 @@ static void setup_low_cost_evm(void)
 	_configure_device(LOW_COST_EVM, low_cost_evm_dev_cfg, PROFILE_NONE);
 }
 
+#ifndef DELTA_AM335X
 static void setup_general_purpose_evm(void)
 {
 	u32 prof_sel = am335x_get_profile_selection();
@@ -1842,6 +2014,14 @@ static void setup_general_purpose_evm(void)
 
 	_configure_device(GEN_PURP_EVM, gen_purp_evm_dev_cfg, (1L << prof_sel));
 }
+#else
+static void setup_general_purpose_evm(void)
+{
+	gp_evm_revision = GP_EVM_REV_IS_1_1A;
+	gigabit_enable = 1;
+	_configure_device(GEN_PURP_EVM, gen_purp_evm_dev_cfg, PROFILE_NONE);
+}
+#endif
 
 static void setup_ind_auto_motor_ctrl_evm(void)
 {
@@ -1910,7 +2090,7 @@ static void setup_beaglebone(void)
 	am33xx_evmid_fillup(BEAGLE_BONE_A3);
 }
 
-
+#ifndef DELTA_AM335X
 static void am335x_setup_daughter_board(struct memory_accessor *m, void *c)
 {
 	int ret;
@@ -1941,7 +2121,15 @@ static void am335x_setup_daughter_board(struct memory_accessor *m, void *c)
 		cpld_version = CPLD_REV_1_0A;
 	}
 }
+#else
+static void am335x_setup_daughter_board(struct memory_accessor *m, void *c)
+{
+	daughter_brd_detected = true;
+	cpld_version = CPLD_REV_1_1A;
+}
+#endif
 
+#ifndef DELTA_AM335X
 static void am335x_evm_setup(struct memory_accessor *mem_acc, void *context)
 {
 	int ret;
@@ -2030,6 +2218,20 @@ out:
 		   __func__ , __FILE__);
 	machine_halt();
 }
+#else
+static void am335x_evm_setup(struct memory_accessor *mem_acc, void *context)
+{
+	/* Fillup global mac id */
+	am33xx_cpsw_macidfillup(&am335x_mac_addr[0][0],
+				&am335x_mac_addr[1][0]);
+	
+	/* setup daughter board */
+	setup_general_purpose_evm();
+
+	/* setup cpsw ??? */
+	am33xx_cpsw_init(gigabit_enable);
+}
+#endif
 
 static struct at24_platform_data am335x_daughter_board_eeprom_info = {
 	.byte_len       = (256*1024) / 8,
@@ -2119,12 +2321,14 @@ static struct i2c_board_info __initdata am335x_i2c_boardinfo[] = {
 		I2C_BOARD_INFO("24c256", BASEBOARD_I2C_ADDR),
 		.platform_data  = &am335x_baseboard_eeprom_info,
 	},
+/*
 	{
 		I2C_BOARD_INFO("cpld_reg", 0x35),
 	},
 	{
 		I2C_BOARD_INFO("tlc59108", 0x40),
 	},
+*/
 	{
 		I2C_BOARD_INFO("tps65910", TPS65910_I2C_ID1),
 		.platform_data  = &am335x_tps65910_info,
