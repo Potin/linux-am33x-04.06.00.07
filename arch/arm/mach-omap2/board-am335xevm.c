@@ -697,7 +697,7 @@ static struct pinmux_config mmc1_pin_mux[] = {
 	{NULL, 0},
 };
 
-#ifndef DELTA_AM335X
+#if 0
 static struct pinmux_config d_can_gp_pin_mux[] = {
 	{"uart0_ctsn.d_can1_tx", OMAP_MUX_MODE2 | AM33XX_PULL_ENBL},
 	{"uart0_rtsn.d_can1_rx", OMAP_MUX_MODE2 | AM33XX_PIN_INPUT_PULLUP},
@@ -736,7 +736,6 @@ static struct pinmux_config uart3_pin_mux[] = {
 	{NULL, 0},
 };
 
-#ifdef DELTA_AM335X
 /* Module pin mux for uart1 */
 static struct pinmux_config uart1_pin_mux[] = {
 	{"uart1_rxd.uart1_rxd",	OMAP_MUX_MODE0 | AM33XX_PIN_INPUT_PULLUP},
@@ -750,7 +749,6 @@ static struct pinmux_config uart5_pin_mux[] = {
 	{"lcd_data8.uart5_txd",	OMAP_MUX_MODE4 | AM33XX_PULL_ENBL},
 	{NULL, 0},
 };
-#endif
 
 
 /*
@@ -1563,6 +1561,14 @@ static struct lis3lv02d_platform_data lis331dlh_pdata = {
 	.st_max_limits[2] = 750,
 };
 
+static void am335x_evm_setup(struct memory_accessor *mem_acc, void *context);
+static struct at24_platform_data odm_eeprom_info = {
+	.byte_len       = (8*1024) / 8,
+	.page_size      = 16,
+//	.flags          = AT24_FLAG_ADDR16,
+	.setup          = am335x_evm_setup,
+	.context        = (void *)NULL,
+};
 static struct i2c_board_info am335x_i2c_boardinfo1[] = {
 #if 0
 	{
@@ -1581,6 +1587,7 @@ static struct i2c_board_info am335x_i2c_boardinfo1[] = {
 #endif
 	{
 		I2C_BOARD_INFO("24c08", 0x50),
+		.platform_data  = &odm_eeprom_info,
 	},
 };
 
@@ -1721,7 +1728,7 @@ out:
 	return;
 }
 
-#ifndef DELTA_AM335X
+#if 0
 static void d_can_init(int evm_id, int profile)
 {
 	switch (evm_id) {
@@ -1896,7 +1903,6 @@ static struct evm_dev_cfg low_cost_evm_dev_cfg[] = {
 	{NULL, 0, 0},
 };
 
-#ifndef DELTA_AM335X
 /* General Purpose EVM */
 static struct evm_dev_cfg gen_purp_evm_dev_cfg[] = {
 	{enable_ecap0,	DEV_ON_DGHTR_BRD, (PROFILE_0 | PROFILE_1 |
@@ -1930,22 +1936,6 @@ static struct evm_dev_cfg gen_purp_evm_dev_cfg[] = {
 	{haptics_init,	DEV_ON_DGHTR_BRD, (PROFILE_4)},
 	{NULL, 0, 0},
 };
-#else
-static struct evm_dev_cfg gen_purp_evm_dev_cfg[] = {
-	{rgmii1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
-	{i2c1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
-	{usb0_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
-	{usb1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
-	{mmc0_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
-	{evm_nand_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
-	{tsc_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
-	{d_can_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
-	{uart_all_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
-	{ecap2_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
-	{NULL, 0, 0},
-};
-
-#endif
 
 /* Industrial Auto Motor Control EVM */
 static struct evm_dev_cfg ind_auto_mtrl_evm_dev_cfg[] = {
@@ -1998,6 +1988,21 @@ static struct evm_dev_cfg beaglebone_dev_cfg[] = {
 	{NULL, 0, 0},
 };
 
+/* ODM AM3352 */
+static struct evm_dev_cfg odm_am3352_dev_cfg[] = {
+	{rgmii1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+//	{i2c1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{usb0_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{usb1_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{mmc0_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{evm_nand_init,	DEV_ON_BASEBOARD, PROFILE_ALL},
+	{tsc_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{d_can_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{uart_all_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{ecap2_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{NULL, 0, 0},
+};
+
 static void setup_low_cost_evm(void)
 {
 	pr_info("The board is a AM335x Low Cost EVM.\n");
@@ -2005,7 +2010,6 @@ static void setup_low_cost_evm(void)
 	_configure_device(LOW_COST_EVM, low_cost_evm_dev_cfg, PROFILE_NONE);
 }
 
-#ifndef DELTA_AM335X
 static void setup_general_purpose_evm(void)
 {
 	u32 prof_sel = am335x_get_profile_selection();
@@ -2027,14 +2031,6 @@ static void setup_general_purpose_evm(void)
 
 	_configure_device(GEN_PURP_EVM, gen_purp_evm_dev_cfg, (1L << prof_sel));
 }
-#else
-static void setup_general_purpose_evm(void)
-{
-	gp_evm_revision = GP_EVM_REV_IS_1_1A;
-	gigabit_enable = 1;
-	_configure_device(GEN_PURP_EVM, gen_purp_evm_dev_cfg, PROFILE_NONE);
-}
-#endif
 
 static void setup_ind_auto_motor_ctrl_evm(void)
 {
@@ -2103,7 +2099,15 @@ static void setup_beaglebone(void)
 	am33xx_evmid_fillup(BEAGLE_BONE_A3);
 }
 
-#ifndef DELTA_AM335X
+static void setup_odm_am3352(void)
+{
+//	gp_evm_revision = GP_EVM_REV_IS_1_1A;
+	daughter_brd_detected = true;
+	gigabit_enable = 1;
+	_configure_device(GEN_PURP_EVM, odm_am3352_dev_cfg, PROFILE_NONE);
+}
+
+#if 0
 static void am335x_setup_daughter_board(struct memory_accessor *m, void *c)
 {
 	int ret;
@@ -2137,12 +2141,10 @@ static void am335x_setup_daughter_board(struct memory_accessor *m, void *c)
 #else
 static void am335x_setup_daughter_board(struct memory_accessor *m, void *c)
 {
-	daughter_brd_detected = true;
-	cpld_version = CPLD_REV_1_1A;
 }
 #endif
 
-#ifndef DELTA_AM335X
+#if 0
 static void am335x_evm_setup(struct memory_accessor *mem_acc, void *context)
 {
 	int ret;
@@ -2233,17 +2235,19 @@ out:
 }
 #else
 static void am335x_evm_setup(struct memory_accessor *mem_acc, void *context)
+//static void am335x_evm_setup(void)
 {
 	/* Fillup global mac id */
 	am33xx_cpsw_macidfillup(&am335x_mac_addr[0][0],
 				&am335x_mac_addr[1][0]);
 	
-	/* setup daughter board */
-	setup_general_purpose_evm();
+	/* setup board */
+	setup_odm_am3352();
 
 	/* setup cpsw ??? */
 	am33xx_cpsw_init(gigabit_enable);
 }
+//late_initcall(am335x_evm_setup);
 #endif
 
 static struct at24_platform_data am335x_daughter_board_eeprom_info = {
@@ -2324,6 +2328,7 @@ static struct tps65910_board am335x_tps65910_info = {
 *	   eeprom probe is called last.
 */
 static struct i2c_board_info __initdata am335x_i2c_boardinfo[] = {
+#if 0
 	{
 		/* Daughter Board EEPROM */
 		I2C_BOARD_INFO("24c256", DAUG_BOARD_I2C_ADDR),
@@ -2334,14 +2339,14 @@ static struct i2c_board_info __initdata am335x_i2c_boardinfo[] = {
 		I2C_BOARD_INFO("24c256", BASEBOARD_I2C_ADDR),
 		.platform_data  = &am335x_baseboard_eeprom_info,
 	},
-/*
+
 	{
 		I2C_BOARD_INFO("cpld_reg", 0x35),
 	},
 	{
 		I2C_BOARD_INFO("tlc59108", 0x40),
 	},
-*/
+#endif
 	{
 		I2C_BOARD_INFO("tps65910", TPS65910_I2C_ID1),
 		.platform_data  = &am335x_tps65910_info,
@@ -2372,7 +2377,7 @@ static int __devexit cpld_reg_remove(struct i2c_client *client)
 	cpld_client = NULL;
 	return 0;
 }
-
+#if 0
 static const struct i2c_device_id cpld_reg_id[] = {
 	{ "cpld_reg", 0 },
 	{ }
@@ -2391,16 +2396,20 @@ static void evm_init_cpld(void)
 {
 	i2c_add_driver(&cpld_reg_driver);
 }
-
+#endif
 static void __init am335x_evm_i2c_init(void)
 {
 	/* Initially assume Low Cost EVM Config */
 	am335x_evm_id = LOW_COST_EVM;
 
-	evm_init_cpld();
+//	evm_init_cpld();
+
+	setup_pin_mux(i2c1_pin_mux);
 
 	omap_register_i2c_bus(1, 100, am335x_i2c_boardinfo,
 				ARRAY_SIZE(am335x_i2c_boardinfo));
+	omap_register_i2c_bus(2, 100, am335x_i2c_boardinfo1,
+				ARRAY_SIZE(am335x_i2c_boardinfo1));
 }
 
 static struct resource am335x_rtc_resources[] = {
