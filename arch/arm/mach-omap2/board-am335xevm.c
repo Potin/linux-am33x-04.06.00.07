@@ -61,6 +61,7 @@
 #include <plat/mmc.h>
 #include <plat/emif.h>
 #include <plat/nand.h>
+#include <plat/omap-serial.h>
 
 #include "board-flash.h"
 #include "cpuidle33xx.h"
@@ -750,6 +751,15 @@ static struct pinmux_config uart5_pin_mux[] = {
 	{NULL, 0},
 };
 
+/* Module pin mux for RS-485 (uart3) */
+static struct pinmux_config rs485_pin_mux[] = {
+	{"spi0_cs1.uart3_rxd",		OMAP_MUX_MODE1 | AM33XX_PIN_INPUT_PULLUP},
+	{"ecap0_in_pwm0_out.uart3_txd",	OMAP_MUX_MODE1 | AM33XX_PULL_ENBL},
+	/* flow control pin */
+	{"lcd_data15.gpio0_11",	OMAP_MUX_MODE7 | AM33XX_PIN_OUTPUT},	
+	{NULL, 0},
+};
+
 
 /*
 * @pin_mux - single module pin-mux structure which defines pin-mux
@@ -1179,9 +1189,17 @@ static void uart_all_init(int evm_id, int profile)
 {
 	setup_pin_mux(uart1_pin_mux);
 	setup_pin_mux(uart2_pin_mux);
-	setup_pin_mux(uart3_pin_mux);
+//	setup_pin_mux(uart3_pin_mux);
 	setup_pin_mux(uart5_pin_mux);
 	return;
+}
+
+/* setup RS-485 */
+static void rs485_init(int evm_id, int profile)
+{
+	int flow_ctrl_gpio = GPIO_TO_PIN(0, 11);
+	setup_pin_mux(rs485_pin_mux);
+	uart_omap_port_set_rts_gpio(3, flow_ctrl_gpio);
 }
 
 /* setup haptics */
@@ -2000,6 +2018,7 @@ static struct evm_dev_cfg odm_am3352_dev_cfg[] = {
 	{d_can_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
 	{uart_all_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
 	{ecap2_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
+	{rs485_init,	DEV_ON_DGHTR_BRD, PROFILE_ALL},
 	{NULL, 0, 0},
 };
 
