@@ -2321,7 +2321,11 @@ static struct regulator_init_data am335x_vdd2 = {
 	.consumer_supplies	= am335x_vdd2_supply,
 };
 
+#define PMIC_IRQ_GPIO		GPIO_TO_PIN(3, 16)
 static struct tps65910_board am335x_tps65910_info = {
+//	.irq_base	= TWL4030_IRQ_BASE,
+//	.gpio_base	= OMAP_MAX_GPIO_LINES,
+//	.irq 		= OMAP_GPIO_IRQ(PMIC_IRQ_GPIO),
 	.tps65910_pmic_init_data[TPS65910_REG_VRTC]	= &am335x_dummy,
 	.tps65910_pmic_init_data[TPS65910_REG_VIO]	= &am335x_dummy,
 	.tps65910_pmic_init_data[TPS65910_REG_VDD1]	= &am335x_vdd1,
